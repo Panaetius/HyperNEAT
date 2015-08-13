@@ -1,0 +1,40 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.23107.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HyperNeatLib", "HyperNeatLib\HyperNeatLib.csproj", "{1A7F7B57-0F47-41B4-9CBA-D06A85D9BA44}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HyperNeatTest", "HyperNeatTest\HyperNeatTest.csproj", "{BAE8CB55-0ABE-43BF-A369-C905132B8996}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HyperNeat.Bitcoin", "HyperNeat.Bitcoin\HyperNeat.Bitcoin.csproj", "{1A5437F0-1983-4CAF-B60C-FED586E76998}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HyperNeat.XorTest", "HyperNeat.XorTest\HyperNeat.XorTest.csproj", "{6C0869A6-AFE2-4414-9734-B895D7CFD297}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{1A7F7B57-0F47-41B4-9CBA-D06A85D9BA44}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1A7F7B57-0F47-41B4-9CBA-D06A85D9BA44}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1A7F7B57-0F47-41B4-9CBA-D06A85D9BA44}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1A7F7B57-0F47-41B4-9CBA-D06A85D9BA44}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BAE8CB55-0ABE-43BF-A369-C905132B8996}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BAE8CB55-0ABE-43BF-A369-C905132B8996}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BAE8CB55-0ABE-43BF-A369-C905132B8996}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BAE8CB55-0ABE-43BF-A369-C905132B8996}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1A5437F0-1983-4CAF-B60C-FED586E76998}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1A5437F0-1983-4CAF-B60C-FED586E76998}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1A5437F0-1983-4CAF-B60C-FED586E76998}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1A5437F0-1983-4CAF-B60C-FED586E76998}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6C0869A6-AFE2-4414-9734-B895D7CFD297}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6C0869A6-AFE2-4414-9734-B895D7CFD297}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6C0869A6-AFE2-4414-9734-B895D7CFD297}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6C0869A6-AFE2-4414-9734-B895D7CFD297}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

@@ -1,0 +1,6 @@
+*.user
+*.suo
+bin
+obj
+/Trader/App.config
+/Trader.Tests/App.config
