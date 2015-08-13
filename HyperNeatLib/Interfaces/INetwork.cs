@@ -32,5 +32,7 @@ namespace HyperNeatLib.Interfaces
         void RandomizeConnectionWeights(Random random);
 
         void Mutate(Random random);
+
+        void Reset();
     }
 }

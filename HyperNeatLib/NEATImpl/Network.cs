@@ -142,6 +142,15 @@ namespace HyperNeatLib.NEATImpl
             }
         }
 
+        public void Reset()
+        {
+            foreach (var neuron in Neurons.Except(new List<INeuron>() { BiasNeuron}))
+            {
+                neuron.Input = 0.0;
+                neuron.Output = 0.0;
+            }
+        }
+
         private bool MutateAuxWeights(Random random)
         {
             var neuronsWithAuxWeights = Neurons.Where(n => n.AcceptsAuxValues).ToList();

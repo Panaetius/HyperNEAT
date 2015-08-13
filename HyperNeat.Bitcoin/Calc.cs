@@ -255,22 +255,40 @@ namespace HyperNeat.Bitcoin
 
                     population.Networks = population.Networks.OrderByDescending(n => n.Fitness).ToList();
 
-                    File.WriteAllText(
-                        "SerializedNetworks.json",
-                        JsonConvert.SerializeObject(
-                            population,
-                            Formatting.None,
-                            new JsonSerializerSettings()
-                            {
-                                TypeNameHandling = TypeNameHandling.Objects,
-                                TypeNameAssemblyFormat =
-                                        System.Runtime.Serialization.Formatters
-                                        .FormatterAssemblyStyle.Simple,
-                                ReferenceLoopHandling = ReferenceLoopHandling.Ignore
-                            }));
+                    //File.WriteAllText(
+                    //    "SerializedNetworks.json",
+                    //    JsonConvert.SerializeObject(
+                    //        population.Networks.First(),
+                    //        Formatting.None,
+                    //        new JsonSerializerSettings()
+                    //        {
+                    //            TypeNameHandling = TypeNameHandling.Objects,
+                    //            TypeNameAssemblyFormat =
+                    //                    System.Runtime.Serialization.Formatters
+                    //                    .FormatterAssemblyStyle.Simple,
+                    //            ReferenceLoopHandling = ReferenceLoopHandling.Ignore
+                    //        }));
+                    JsonSerializer serializer = new JsonSerializer();
+                    serializer.NullValueHandling = NullValueHandling.Include;
+                    serializer.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
+                    serializer.TypeNameAssemblyFormat =
+                        System.Runtime.Serialization.Formatters.FormatterAssemblyStyle.Simple;
+                    serializer.TypeNameHandling = TypeNameHandling.Objects;
+                    serializer.Formatting = Formatting.Indented;
+
+                    using (StreamWriter sw = new StreamWriter(@"SerializedNetworks.json"))
+                    using (JsonWriter writer = new JsonTextWriter(sw))
+                    {
+                        serializer.Serialize(writer, population.Networks.First());
+                    }
                 }
 
                 population.CalculateNextPopulation();
+
+                foreach (var network in population.Networks)
+                {
+                    network.Reset();
+                }
 
                 count++;
             }
