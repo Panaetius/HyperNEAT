@@ -34,7 +34,45 @@ namespace HyperNeatLib.Factories
             {
                 foreach (var output in network.Outputs)
                 {
-                    network.Connections.Add(ConnectionFactory.CreateConnection(input, output, random.NextDouble()));
+                    var conn = ConnectionFactory.CreateConnection(input, output, random.NextDouble());
+                    network.Connections.Add(conn);
+
+                    if (conn.IsEnabled)
+                    {
+                        network.EnabledConnections.Add(conn);
+                    }
+                }
+            }
+
+            network.RandomizeConnectionWeights(random);
+
+            return network;
+        }
+
+        public static Network CreateEmptyNetworkFromExisting(INetwork existing)
+        {
+            var network = new Network();
+
+            network.Inputs = existing.Inputs.Select(i => (INeuron)i.Clone()).ToList();
+            network.Outputs = existing.Outputs.Select(i => (INeuron)i.Clone()).ToList();
+
+            network.BiasNeuron = (INeuron)existing.BiasNeuron.Clone();
+
+            //create connections
+
+            var random = new Random();
+
+            foreach (var input in network.Inputs.Concat(new List<INeuron>() { network.BiasNeuron }))
+            {
+                foreach (var output in network.Outputs)
+                {
+                    var conn = ConnectionFactory.CreateConnection(input, output, random.NextDouble());
+                    network.Connections.Add(conn);
+
+                    if (conn.IsEnabled)
+                    {
+                        network.EnabledConnections.Add(conn);
+                    }
                 }
             }
 
@@ -53,6 +91,7 @@ namespace HyperNeatLib.Factories
             network.HiddenNodes = neurons.Where(n => n.Type == NeuronType.Hidden).ToList();
 
             network.Connections = connections;
+            network.EnabledConnections = connections.Where(c => c.IsEnabled).ToList();
 
             return network;
         }

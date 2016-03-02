@@ -11,5 +11,11 @@
         public int NextConnectionGeneration => this.connectionGeneration++;
 
         public int NextNeuronGeneration => this.neuronGeneration++;
+
+        public void Reset()
+        {
+            connectionGeneration = 1;
+            neuronGeneration = 1;
+        }
     }
 }

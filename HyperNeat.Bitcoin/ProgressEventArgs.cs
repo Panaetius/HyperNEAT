@@ -25,5 +25,17 @@ namespace HyperNeat.Bitcoin
         public double AverageFitness;
 
         public string TradeHistory;
+
+        public string NetworkFingerprint;
+
+        public int TradeCounts;
+
+        public double BestGenomeTotalMoney;
+
+        public string SpeciesOverview;
+
+        public DateTime StartTime;
+
+        public DateTime EndTime;
     }
 }

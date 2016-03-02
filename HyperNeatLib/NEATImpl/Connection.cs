@@ -17,11 +17,6 @@ namespace HyperNeatLib.NEATImpl
 
         public void Calculate()
         {
-            if (!IsEnabled)
-            {
-                return;
-            }
-
             OutputNode.Input += InputNode.Output * Weight;
         }
 

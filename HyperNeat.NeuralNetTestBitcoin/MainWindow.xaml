@@ -1,0 +1,42 @@
+﻿<Window x:Class="HyperNeat.NeuralNetTestBitcoin.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:HyperNeat.NeuralNetTestBitcoin"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="350" Width="525">
+    <Grid>
+        <StackPanel Orientation="Vertical">
+                <StackPanel Orientation="Horizontal">
+                    <TextBox Name="selectedFile" Width="463"></TextBox>
+                    <Button Name="btnOpenFile" Click="btnOpenFile_Click">Open file</Button>
+                </StackPanel>
+            <Button Name="DoIt" Click="doIt_Click">Do It!</Button>
+            <StackPanel Orientation="Horizontal">
+                <Label Content="Profit Ratio:"></Label>
+                <Label Name="ProfitRatio" Width="400"></Label>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+                <Label Content="Total Money:"></Label>
+                <Label Name="TotalMoney" Width="400"></Label>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+                <Label Content="Fitness:"></Label>
+                <Label Name="Fitness" Width="400"></Label>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+                <Label Content="Trade History:"></Label>
+                <TextBox Name="TradeHistory" Width="400"></TextBox>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+                <Label Content="Buys"></Label>
+                <Label Name="Buys" Width="400"></Label>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+                <Label Content="Sells"></Label>
+                <Label Name="Sells" Width="400"></Label>
+            </StackPanel>
+        </StackPanel>
+    </Grid>
+</Window>

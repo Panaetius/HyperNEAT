@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 
+using Newtonsoft.Json;
+
 namespace HyperNeatLib.Interfaces
 {
     public interface INetwork : ICloneable
@@ -21,8 +23,11 @@ namespace HyperNeatLib.Interfaces
 
         double Fitness { get; set; }
 
+        double Score { get; set; }
+
         int Generation { get; set; }
 
+        [JsonIgnore]
         ISpecie Specie { get; set; }
 
         void SetInputs(params double[] inputs);
@@ -34,5 +39,7 @@ namespace HyperNeatLib.Interfaces
         void Mutate(Random random);
 
         void Reset();
+
+        string Fingerprint();
     }
 }

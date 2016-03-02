@@ -15,9 +15,12 @@ namespace HyperNeat.Bitcoin
 
         private Calc calc;
 
+        private Thread calcthread;
+
         private void StartButton_OnClick(object sender, RoutedEventArgs e)
         {
             StartButton.IsEnabled = false;
+            StopButton.IsEnabled = true;
 
             calc = new Calc();
             calc.ProgressUpdate += (s, ee) => {
@@ -36,10 +39,12 @@ namespace HyperNeat.Bitcoin
                             Sells.Content = progress.BestGenomeSells;
                             Species.Content = progress.SpecieCount;
                             TradeHistory.Content = progress.TradeHistory;
+                            Fingerprint.Content = progress.NetworkFingerprint;
+                            SpeciesOverview.Content = progress.SpeciesOverview;
 
                             History.AppendText(
                                 string.Format(
-                                    "Gen: {4}, Max Fit: {0:0.00000}, AVG Fit: {9:0.00000}, Money: {5:0.00000}, Buy: {1}, Sells: {2}, WP: {3:0.00000}, Start: {6}, End: {7}, Spec: {8} \n",
+                                    "Gen: {4}, Max Fit: {0:0.00000}, AVG Fit: {9:0.00000}, Money: {5:0.00}, Best Money: {12:0.00}, Buy: {1}, Sells: {2}, Counts: {11} YP: {3:0.00000}, Start: {6}, End: {7}, ST: {13:yyyy-MM-dd}, ET: {14:yyyy-MM-dd}, FP: {10}, Spec: {8} \n",
                                     progress.BestGenomeFitness,
                                     progress.BestGenomeBuys,
                                     progress.BestGenomeSells,
@@ -49,13 +54,18 @@ namespace HyperNeat.Bitcoin
                                     progress.StartPrice,
                                     progress.EndPrice,
                                     progress.SpecieCount,
-                                    progress.AverageFitness));
+                                    progress.AverageFitness,
+                                    progress.NetworkFingerprint,
+                                    progress.TradeCounts,
+                                    progress.BestGenomeTotalMoney,
+                                    progress.StartTime,
+                                    progress.EndTime));
                             
                             History.ScrollToEnd();
                         });
             };
 
-            Thread calcthread = new Thread(new ParameterizedThreadStart(calc.StartTrading));
+            calcthread = new Thread(new ParameterizedThreadStart(calc.StartTrading));
             calcthread.IsBackground = true;
             calcthread.Priority = ThreadPriority.BelowNormal;
             calcthread.Start(null);
@@ -64,6 +74,24 @@ namespace HyperNeat.Bitcoin
         private void SerializeButton_OnClick(object sender, RoutedEventArgs e)
         {
             calc.DoSerialize = true;
+        }
+
+        private void StopButton_OnClick(object sender, RoutedEventArgs e)
+        {
+            StartButton.IsEnabled = true;
+            StopButton.IsEnabled = false;
+
+            if (calcthread != null && (calcthread.ThreadState == ThreadState.Running || calcthread.ThreadState == ThreadState.Background))
+            {
+                calc.Stop = true;
+
+                calcthread.Join();
+
+                calcthread = null;
+                calc = null;
+
+                History.Clear();
+            }
         }
     }
 }

@@ -10,7 +10,7 @@ namespace HyperNeatLib.ActivationFunctions
     {
         public object Clone()
         {
-            return new PlainSigmoidActivationFunction();
+            return new AbsoluteActivationFunction();
         }
 
         public double Calc(double input)

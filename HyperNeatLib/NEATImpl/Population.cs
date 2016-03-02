@@ -1,10 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Runtime.Serialization.Formatters;
 using System.Threading.Tasks;
 
 using HyperNeatLib.Factories;
 using HyperNeatLib.Interfaces;
+
+using Newtonsoft.Json;
 
 namespace HyperNeatLib.NEATImpl
 {
@@ -20,6 +24,10 @@ namespace HyperNeatLib.NEATImpl
         public int CurrentGeneration { get; set; }
 
         private const int MaxKmeansLoop = 5;
+
+        private const int NewRandomsPerGeneration = 1;
+
+        private const int NewAncestorsPerGeneration = 1;
 
         public double MutationRate { get; set; }
 
@@ -254,7 +262,7 @@ namespace HyperNeatLib.NEATImpl
 
         public void SortByFitness()
         {
-            Networks = Networks.OrderByDescending(n => n.Fitness).ThenByDescending(n => n.Generation).ToList();
+            Networks = Networks.OrderByDescending(n => n.Fitness).ThenByDescending(n => n.Score).ThenByDescending(n => n.Generation).ToList();
         }
 
         public void CalculateNextPopulation()
@@ -359,10 +367,48 @@ namespace HyperNeatLib.NEATImpl
                 }
             }
 
+            var old = offspringList.First(); 
+
+            //add one random new network each generation
+            for (int i = 0; i < NewRandomsPerGeneration; i++)
+            {
+                var newNetwork = NetworkFactory.CreateEmptyNetworkFromExisting(old);
+
+                newNetwork.Generation = old.Generation;
+                newNetwork.RandomizeConnectionWeights(random);
+                offspringList.Add(newNetwork);
+            }
+
+            //add one old network each generation
+            if (Directory.Exists("old_nets") && Directory.GetFiles("old_nets").Count() > 0)
+            {
+                for (int i = 0; i < NewAncestorsPerGeneration; i++)
+                {
+                    var files = Directory.GetFiles("old_nets");
+                    var index = random.Next(0, files.Length);
+
+                    JsonSerializer serializer = new JsonSerializer();
+                    serializer.NullValueHandling = NullValueHandling.Include;
+                    //serializer.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
+                    serializer.TypeNameAssemblyFormat =
+                        FormatterAssemblyStyle.Simple;
+                    serializer.TypeNameHandling = TypeNameHandling.Objects;
+                    serializer.Formatting = Formatting.Indented;
+                    serializer.PreserveReferencesHandling = PreserveReferencesHandling.Objects;
+                    using (StreamReader sr = new StreamReader(files[index]))
+                    using (JsonTextReader reader = new JsonTextReader(sr))
+                    {
+                        offspringList.Add(serializer.Deserialize<Network>(reader));
+                    }
+                }
+            }
+
             //remove non-elites from species
             foreach (var specie in Species)
             {
-                specie.Networks = specie.Networks.OrderByDescending(n => n.Fitness).Take(specie.EliteSize).ToList();
+                specie.Networks = specie.Networks.OrderByDescending(n => n.Fitness).ThenByDescending(n => n.Score).Take(specie.EliteSize).ToList();
+                
+                offspringList.AddRange(specie.Networks);
             }
 
             SpeciateOffspring(offspringList);
@@ -659,7 +705,7 @@ namespace HyperNeatLib.NEATImpl
 
             foreach (var specie in this.Species)
             {
-                var targetSize = (specieMeanFitness[specie] / totalMeanFitness * this.PopulationSize);
+                var targetSize = (specieMeanFitness[specie] / totalMeanFitness * (this.PopulationSize));
 
                 var intTargetSize = ProbabilisticRound(targetSize, random);
 

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 
 using HyperNeatLib.Factories;
 using HyperNeatLib.Helpers;
@@ -14,6 +15,7 @@ namespace HyperNeatLib.NEATImpl
         {
             this.HiddenNodes = new List<INeuron>();
             Connections = new List<IConnection>();
+            EnabledConnections = new List<IConnection>();
             Inputs = new List<INeuron>();
             Outputs = new List<INeuron>();
         }
@@ -23,6 +25,8 @@ namespace HyperNeatLib.NEATImpl
         public List<INeuron> HiddenNodes { get; set; }
 
         public List<IConnection> Connections { get; set; }
+
+        public List<IConnection> EnabledConnections { get; set; }
 
         public List<INeuron> Inputs { get; set; }
 
@@ -48,6 +52,8 @@ namespace HyperNeatLib.NEATImpl
 
         public double Fitness { get; set; }
 
+        public double Score { get; set; }
+
         public int Generation { get; set; }
 
         public ISpecie Specie { get; set; }
@@ -71,7 +77,7 @@ namespace HyperNeatLib.NEATImpl
         {
             for (int i = 0; i < ActivationSteps; i++)
             {
-                foreach (var connection in Connections)
+                foreach (var connection in EnabledConnections)
                 {
                     connection.Calculate();
                 }
@@ -104,7 +110,7 @@ namespace HyperNeatLib.NEATImpl
         {
             var max = MutationParameterSingleton.MutateConnectionWeightsChance
                       + MutationParameterSingleton.AddConnectionChance + MutationParameterSingleton.AddNeuronChance
-                      + MutationParameterSingleton.MutateAuxChance;
+                      + MutationParameterSingleton.MutateAuxChance + MutationParameterSingleton.MutateNeuronChance;
 
             while (true)
             {
@@ -132,7 +138,16 @@ namespace HyperNeatLib.NEATImpl
                 }
 
                 if (chance < MutationParameterSingleton.MutateConnectionWeightsChance + MutationParameterSingleton.AddConnectionChance
-                    + MutationParameterSingleton.AddNeuronChance + MutationParameterSingleton.MutateAuxChance)
+                    + MutationParameterSingleton.AddNeuronChance + MutationParameterSingleton.MutateNeuronChance)
+                {
+                    if (MutateNeuron(random))
+                    {
+                        return;
+                    }
+                }
+
+                if (chance < MutationParameterSingleton.MutateConnectionWeightsChance + MutationParameterSingleton.AddConnectionChance
+                    + MutationParameterSingleton.AddNeuronChance + MutationParameterSingleton.MutateNeuronChance + MutationParameterSingleton.MutateAuxChance)
                 {
                     if (MutateAuxWeights(random))
                     {
@@ -142,6 +157,20 @@ namespace HyperNeatLib.NEATImpl
             }
         }
 
+        private bool MutateNeuron(Random random)
+        {
+            if (!HiddenNodes.Any())
+            {
+                return false;
+            }
+
+            var neuron = HiddenNodes[random.Next(0, HiddenNodes.Count)];
+
+            neuron.ActivationFunction = ActivationFunctionFactory.Instance.GetRandomActivationFunction();
+
+            return true;
+        }
+
         public void Reset()
         {
             foreach (var neuron in Neurons.Except(new List<INeuron>() { BiasNeuron}))
@@ -149,6 +178,26 @@ namespace HyperNeatLib.NEATImpl
                 neuron.Input = 0.0;
                 neuron.Output = 0.0;
             }
+        }
+
+        public string Fingerprint()
+        {
+            var intArray =
+                HiddenNodes.OrderBy(n => n.Id)
+                    .Select(n => n.Id)
+                    .Concat(Connections.OrderBy(c => c.Id).Select(c => c.Id))
+                    .SelectMany(BitConverter.GetBytes)
+                    .Where(b => b != 0)
+                    .ToArray();
+
+            var hex = new StringBuilder(intArray.Length * 2);
+
+            foreach (byte b in intArray)
+            {
+                hex.AppendFormat("{0:x}", b);
+            }
+
+            return hex.ToString();
         }
 
         private bool MutateAuxWeights(Random random)
@@ -231,6 +280,11 @@ namespace HyperNeatLib.NEATImpl
 
                 this.Connections.Add(newConnection);
 
+                if (newConnection.IsEnabled)
+                {
+                    EnabledConnections.Add(newConnection);
+                }
+
                 return true;
             }
 
@@ -244,6 +298,15 @@ namespace HyperNeatLib.NEATImpl
             if (random.NextDouble() < MutationParameterSingleton.DisableConnectionChance)
             {
                 connection.IsEnabled = !connection.IsEnabled;
+
+                if (!connection.IsEnabled)
+                {
+                    EnabledConnections.Remove(connection);
+                }
+                else
+                {
+                    EnabledConnections.Add(connection);
+                }
             }
             else
             {
@@ -290,6 +353,11 @@ namespace HyperNeatLib.NEATImpl
                 }
 
                 network.Connections.Add(newConnection);
+
+                if (newConnection.IsEnabled)
+                {
+                    EnabledConnections.Add(newConnection);
+                }
             }
 
             return network;

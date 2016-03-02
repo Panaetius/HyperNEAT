@@ -10,46 +10,72 @@
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="250" />
             <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
-            <RowDefinition Height="30" />
+            <RowDefinition Height="20" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="160"/>
         </Grid.RowDefinitions>
         <Button Name="StartButton" Click="StartButton_OnClick" Content="Start" Grid.Row="0" Grid.Column="0"></Button>
-        <Button Name="SerializeButton" Click="SerializeButton_OnClick" Content="Serialize" Grid.Row="0" Grid.Column="1"></Button>
-        <Label Content="Current Generation" Grid.Row="1" Grid.Column="0"></Label>
-        <Label Name="CurrentGeneration" Grid.Row="1" Grid.Column="1"></Label>
-        <Label Content="Max Fitness" Grid.Row="2" Grid.Column="0"></Label>
-        <Label Name="MaxFitness" Grid.Row="2" Grid.Column="1"></Label>
-        <Label Content="Average Fitness" Grid.Row="3" Grid.Column="0"></Label>
-        <Label Name="AvgFitness" Grid.Row="3" Grid.Column="1"></Label>
-        <Label Content="Money" Grid.Row="4" Grid.Column="0"></Label>
-        <Label Name="Money" Grid.Row="4" Grid.Column="1"></Label>
-        <Label Content="Start" Grid.Row="5" Grid.Column="0"></Label>
-        <Label Name="Start" Grid.Row="5" Grid.Column="1"></Label>
-        <Label Content="End" Grid.Row="6" Grid.Column="0"></Label>
-        <Label Name="End" Grid.Row="6" Grid.Column="1"></Label>
-        <Label Content="Weekly Profit" Grid.Row="7" Grid.Column="0"></Label>
-        <Label Name="WeeklyProfit" Grid.Row="7" Grid.Column="1"></Label>
-        <Label Content="Buys" Grid.Row="8" Grid.Column="0"></Label>
-        <Label Name="Buys" Grid.Row="8" Grid.Column="1"></Label>
-        <Label Content="Sells" Grid.Row="9" Grid.Column="0"></Label>
-        <Label Name="Sells" Grid.Row="9" Grid.Column="1"></Label>
-        <Label Content="Species" Grid.Row="10" Grid.Column="0"></Label>
-        <Label Name="Species" Grid.Row="10" Grid.Column="1"></Label>
-        <Label Content="Trade History" Grid.Row="11" Grid.Column="0"></Label>
-        <Label Name="TradeHistory" Grid.Row="11" Grid.Column="1"></Label>
-        <TextBox Name="History" IsReadOnly="True" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" Grid.Row="12" Grid.ColumnSpan="2" Grid.Column="0"></TextBox>
+        <Button Name="StopButton" Click="StopButton_OnClick" Content="Stop" Grid.Row="0" Grid.Column="1" IsEnabled="False"></Button>
+        <Button Name="SerializeButton" Click="SerializeButton_OnClick" Content="Serialize" Grid.Row="0" Grid.Column="2"></Button>
+        <Expander Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" IsExpanded="True">
+            <StackPanel Orientation="Vertical">
+                <StackPanel Orientation="Horizontal">
+                    <Label Content="Current Generation" Grid.Row="1" Grid.Column="0"></Label>
+                    <Label Name="CurrentGeneration" Grid.Row="1" Grid.Column="1"></Label>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <Label Content="Max Fitness" Grid.Row="2" Grid.Column="0"></Label>
+                    <Label Name="MaxFitness" Grid.Row="2" Grid.Column="1"></Label>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <Label Content="Average Fitness" Grid.Row="3" Grid.Column="0"></Label>
+                    <Label Name="AvgFitness" Grid.Row="3" Grid.Column="1"></Label>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <Label Content="Money" Grid.Row="4" Grid.Column="0"></Label>
+                    <Label Name="Money" Grid.Row="4" Grid.Column="1"></Label>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <Label Content="Start" Grid.Row="5" Grid.Column="0"></Label>
+                    <Label Name="Start" Grid.Row="5" Grid.Column="1"></Label>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <Label Content="End" Grid.Row="6" Grid.Column="0"></Label>
+                    <Label Name="End" Grid.Row="6" Grid.Column="1"></Label>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <Label Content="Weekly Profit" Grid.Row="7" Grid.Column="0"></Label>
+                    <Label Name="WeeklyProfit" Grid.Row="7" Grid.Column="1"></Label>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <Label Content="Buys" Grid.Row="8" Grid.Column="0"></Label>
+                    <Label Name="Buys" Grid.Row="8" Grid.Column="1"></Label>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <Label Content="Sells" Grid.Row="9" Grid.Column="0"></Label>
+                    <Label Name="Sells" Grid.Row="9" Grid.Column="1"></Label>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <Label Content="Species" Grid.Row="10" Grid.Column="0"></Label>
+                    <Label Name="Species" Grid.Row="10" Grid.Column="1"></Label>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <Label Content="Trade History" Grid.Row="11" Grid.Column="0"></Label>
+                    <Label Name="TradeHistory" Grid.Row="11" Grid.Column="1"></Label>
+                </StackPanel>
+                <StackPanel>
+                    <Label Content="Fingerprint"></Label>
+                    <Label Name="Fingerprint"></Label>
+                </StackPanel>
+            </StackPanel>
+        </Expander>
+        
+        <Label Name="SpeciesOverview" Grid.Row="1" Grid.Column="2"></Label>
+        <Expander Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3" IsExpanded="True">
+            <TextBox Name="History" IsReadOnly="True" VerticalAlignment="Stretch" HorizontalScrollBarVisibility="Auto" Margin="10,10,10,10" VerticalScrollBarVisibility="Auto" Height="{Binding ElementName=Container,Path=ActualHeight}"></TextBox>
+        </Expander>
     </Grid>
 </Window>

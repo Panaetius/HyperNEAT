@@ -40,7 +40,7 @@ namespace HyperNeatLib.ActivationFunctions
 
         public object Clone()
         {
-            return new LinearActivationFunction();
+            return new StepActivationFunction();
         }
     }
 }
