@@ -27,6 +27,8 @@ namespace HyperNeatLib.NEATImpl
 
         private const int NewRandomsPerGeneration = 1;
 
+        private const int NewRandomMutatedPerGeneration = 1;
+
         private const int NewAncestorsPerGeneration = 1;
 
         public double MutationRate { get; set; }
@@ -53,8 +55,6 @@ namespace HyperNeatLib.NEATImpl
 
         public void SpeciateOffspring(List<INetwork> offspring)
         {
-            Parallel.ForEach(Species, CalculateCentroid);
-
             foreach (var o in offspring)
             {
                 var closestSpecie = FindClosestSpecie(o.Position);
@@ -378,6 +378,23 @@ namespace HyperNeatLib.NEATImpl
                 newNetwork.RandomizeConnectionWeights(random);
                 offspringList.Add(newNetwork);
             }
+
+            //add one randomly mutated new network
+            for (int i = 0; i < NewRandomMutatedPerGeneration; i++)
+            {
+                var newNetwork = NetworkFactory.CreateEmptyNetworkFromExisting(old);
+
+                newNetwork.Generation = old.Generation;
+                newNetwork.RandomizeConnectionWeights(random);
+
+                for (int j = 0; j < 10; j++)
+                {
+                    newNetwork.Mutate(random);
+                }
+
+                offspringList.Add(newNetwork);
+            }
+
 
             //add one old network each generation
             if (Directory.Exists("old_nets") && Directory.GetFiles("old_nets").Count() > 0)

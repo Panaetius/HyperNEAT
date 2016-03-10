@@ -11,7 +11,7 @@ namespace GraphPopulation
 {
     public partial class Form1 : Form
     {
-        private const int MinCount = 20;
+        private const int MinCount = 10;
         
         public Form1()
         {
@@ -28,7 +28,7 @@ namespace GraphPopulation
                 case ChartElementType.DataPoint:
                     var dataPoint = e.HitTestResult.Series.Points[e.HitTestResult.PointIndex];
                     e.Text = string.Format("{2}\r\n X:\t{0}\nY:\t{1}", dataPoint.XValue, dataPoint.YValues[0], e.HitTestResult.Series.Name);
-                    foreach (var series in chart1.Series)
+                    foreach (var series in chart1.Series.Where(s => s.BorderWidth > 1))
                     {
                         series.BorderWidth = 1;
                     }
@@ -87,9 +87,20 @@ namespace GraphPopulation
                 }
             }
 
-            chart1.Width = i * 10;
+            chart1.Width = Math.Max(1900, i * 10);
 
-            entries = entries.Where(e => e.Value.Values.Any(v => v > MinCount) && e.Value.Values.Count > 200).ToDictionary(e => e.Key, e => e.Value);
+            if (lines.Count() > 1000)
+            {
+                entries =
+                    entries.Where(e => e.Value.Values.Any(v => v > MinCount) && e.Value.Values.Count > 50)
+                        .ToDictionary(e => e.Key, e => e.Value);
+            }
+            else
+            {
+                entries =
+                    entries.Where(e => e.Value.Values.Any(v => v > MinCount))
+                        .ToDictionary(e => e.Key, e => e.Value);
+            }
 
             chart1.Series.Clear();
 

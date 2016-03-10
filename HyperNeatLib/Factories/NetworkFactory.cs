@@ -36,11 +36,6 @@ namespace HyperNeatLib.Factories
                 {
                     var conn = ConnectionFactory.CreateConnection(input, output, random.NextDouble());
                     network.Connections.Add(conn);
-
-                    if (conn.IsEnabled)
-                    {
-                        network.EnabledConnections.Add(conn);
-                    }
                 }
             }
 
@@ -68,11 +63,6 @@ namespace HyperNeatLib.Factories
                 {
                     var conn = ConnectionFactory.CreateConnection(input, output, random.NextDouble());
                     network.Connections.Add(conn);
-
-                    if (conn.IsEnabled)
-                    {
-                        network.EnabledConnections.Add(conn);
-                    }
                 }
             }
 
@@ -91,7 +81,6 @@ namespace HyperNeatLib.Factories
             network.HiddenNodes = neurons.Where(n => n.Type == NeuronType.Hidden).ToList();
 
             network.Connections = connections;
-            network.EnabledConnections = connections.Where(c => c.IsEnabled).ToList();
 
             return network;
         }

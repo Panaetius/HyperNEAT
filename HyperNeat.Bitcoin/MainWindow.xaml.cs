@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Windows;
 
 namespace HyperNeat.Bitcoin
@@ -44,7 +45,7 @@ namespace HyperNeat.Bitcoin
 
                             History.AppendText(
                                 string.Format(
-                                    "Gen: {4}, Max Fit: {0:0.00000}, AVG Fit: {9:0.00000}, Money: {5:0.00}, Best Money: {12:0.00}, Buy: {1}, Sells: {2}, Counts: {11} YP: {3:0.00000}, Start: {6}, End: {7}, ST: {13:yyyy-MM-dd}, ET: {14:yyyy-MM-dd}, FP: {10}, Spec: {8} \n",
+                                    "{15:HH:mm:ss} Gen: {4}, Max Fit: {0:0.00000}, AVG Fit: {9:0.00000}, Money: {5:0.00}, Best Money: {12:0.00}, Buy: {1}, Sells: {2}, Counts: {11} YP: {3:0.00000}, Start: {6}, End: {7}, ST: {13:yyyy-MM-dd}, ET: {14:yyyy-MM-dd}, FP: {10}, Spec: {8} \n",
                                     progress.BestGenomeFitness,
                                     progress.BestGenomeBuys,
                                     progress.BestGenomeSells,
@@ -59,7 +60,8 @@ namespace HyperNeat.Bitcoin
                                     progress.TradeCounts,
                                     progress.BestGenomeTotalMoney,
                                     progress.StartTime,
-                                    progress.EndTime));
+                                    progress.EndTime,
+                                    DateTime.Now));
                             
                             History.ScrollToEnd();
                         });

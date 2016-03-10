@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.Serialization.Formatters;
+using System.Threading;
 using System.Threading.Tasks;
 
 using HyperNeatLib.Factories;
@@ -25,7 +26,7 @@ namespace HyperNeat.Bitcoin
 
         public const int TradePeriod = 1;
 
-        public const int TradeMonths = 8;
+        public const int TradeMonths = 3;
 
         public int TradeLength
         {
@@ -39,7 +40,7 @@ namespace HyperNeat.Bitcoin
         {
             GenerationIdSingleton.Instance.Reset();
 
-            var population = PopulationFactory.CreatePopulation(7, 2, 200);
+            var population = PopulationFactory.CreatePopulation(7, 2, 100);
 
             population.InitialSpeciesSize = 10;
 
@@ -132,26 +133,87 @@ namespace HyperNeat.Bitcoin
 
             var endWeight = 0.1;
 
+            double bestGenomeOverallFitness = 0.0;
+            int lastBestGenomeOverallChange = 1;
+
+            //Calculate exonential moving average start
+            var startEma = trades.First().FirstPrice;
+
+            foreach (var tr in trades.Take(10))
+            {
+                startEma = startEma + 0.18 * (tr.FirstPrice - startEma);
+            }
+
+            trades = trades.Skip(10).ToList();
+
+            List<TradeEntry> newTrades = null;
+
+            var thread = new Thread(
+                () =>
+                    {
+                        while (newTrades == null || newTrades.Count < 8000
+                               || (ascending && newTrades.First().FirstPrice <= newTrades.Last().LastPrice)
+                               || (!ascending && newTrades.First().FirstPrice > newTrades.Last().LastPrice))
+                        {
+                            newTrades = null;
+
+                            GC.Collect();
+
+                            start = random.Next(minUnixTime, (int)(maxUnixTime - (TradeMonths * 30 * 24 * 60 * 60)));
+                            end = random.Next(
+                                start + ((TradeMonths * 30 * 24 * 60 * 60) / 2),
+                                start + (TradeMonths * 30 * 24 * 60 * 60));
+
+                            newTrades = GetTradeEntries(start, end, !ascending);
+                        }
+
+                        ascending = !ascending;
+                    });
+
+            thread.Start();
+
             while (true)
             {
-                if (count % 100 == 0)
+                if (count - lastBestGenomeOverallChange > 5)
                 {
-                    while (trades == null || (ascending && trades.First().FirstPrice <= trades.Last().LastPrice)
-                           || (!ascending && trades.First().FirstPrice > trades.Last().LastPrice))
+                    thread.Join();
+
+                    startEma = newTrades.First().FirstPrice;
+
+                    foreach (var tr in newTrades.Take(10))
                     {
-                        trades = null;
-
-                        GC.Collect();
-
-                        start = random.Next(minUnixTime, (int)(maxUnixTime - (TradeMonths * 30 * 24 * 60 * 60)));
-                        end = random.Next(
-                            start + ((TradeMonths * 30 * 24 * 60 * 60) / 2),
-                            start + (TradeMonths * 30 * 24 * 60 * 60));
-
-                        trades = GetTradeEntries(start, end, !ascending);
+                        startEma = startEma + 0.18 * (tr.FirstPrice - startEma);
                     }
 
-                    ascending = !ascending;
+                    newTrades = newTrades.Skip(10).ToList();
+
+                    trades = newTrades;
+
+                    bestGenomeOverallFitness = 0.0;
+
+                    thread = new Thread(
+                        () =>
+                        {
+                            while (newTrades == null || newTrades.Count < 8000
+                                   || (ascending && newTrades.First().FirstPrice <= newTrades.Last().LastPrice)
+                                   || (!ascending && newTrades.First().FirstPrice > newTrades.Last().LastPrice))
+                            {
+                                newTrades = null;
+
+                                GC.Collect();
+
+                                start = random.Next(minUnixTime, (int)(maxUnixTime - (TradeMonths * 30 * 24 * 60 * 60)));
+                                end = random.Next(
+                                    start + ((TradeMonths * 30 * 24 * 60 * 60) / 2),
+                                    start + (TradeMonths * 30 * 24 * 60 * 60));
+
+                                newTrades = GetTradeEntries(start, end, !ascending);
+                            }
+
+                            ascending = !ascending;
+                        });
+
+                    thread.Start();
                 }
 
                 var turnWeightDifference = (1 - endWeight) / trades.Count;
@@ -194,18 +256,35 @@ namespace HyperNeat.Bitcoin
 
                         var currFitness = 0.0;
 
-                        foreach (var trade in trades)
+                        var ema = startEma;
+
+                        foreach (var trade in trades.ToList())
                         {
                             if (Stop)
                             {
                                 return;
                             }
 
+                            ema = ema + 0.18 * (trade.FirstPrice - ema);
+
                             currentTrade = trade;
 
-                            network.SetInputs(trade.FirstPrice, trade.LastPrice, trade.MinPrice, trade.MaxPrice, trade.Volume, usd, bitcoin);
+                            network.SetInputs(
+                                (trade.FirstPrice / ema - 1) * 100,
+                                (trade.LastPrice / ema - 1) * 100,
+                                (trade.MinPrice / ema - 1) * 100,
+                                (trade.MaxPrice / ema - 1) * 100,
+                                trade.Volume,
+                                usd,
+                                bitcoin * trade.FirstPrice);
 
                             var output = network.GetOutputs();
+
+                            if (i < 50)
+                            {
+                                i++; //do nothing first 50 rounds so networks can initialize if necessary
+                                continue;
+                            }
 
                             if (output[0] > 0)
                             {
@@ -307,12 +386,17 @@ namespace HyperNeat.Bitcoin
                         var totalAmount = usd + (buys.Any() ? buys.Sum(b => b.Item1 * b.Item2 * 0.998) : 0);
 
                         //networks that don't trade at all get no fitness, networks that don't sell ever get a handycap
-                        var val = profits - losses;
+                        var val = (profits - losses) * startPrice / endPrice;
                         network.Fitness = Math.Max(0.0, 400 / (1 + Math.Exp(-0.02 * (val - 200))) - 6);
 
-                        if (network.HiddenNodes.Count == 0)
+                        //if (network.HiddenNodes.Count == 0)
+                        //{
+                        //    network.Fitness = Math.Min(network.Fitness/1.5, 4);
+                        //}
+
+                        if (buyCount * sellCount < 1)
                         {
-                            network.Fitness = Math.Min(network.Fitness/1.5, 4);
+                            network.Fitness = 0.01;
                         }
 
                         network.Score = totalAmount;
@@ -330,6 +414,12 @@ namespace HyperNeat.Bitcoin
                             }
                         }
                     });
+
+                if (bestGenomeFitness / bestGenomeOverallFitness > 1.5)
+                {
+                    bestGenomeOverallFitness = bestGenomeFitness;
+                    lastBestGenomeOverallChange = count;
+                }
 
                 File.AppendAllText(
                     "PopulationDevelopment.txt",

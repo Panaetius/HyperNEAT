@@ -15,7 +15,6 @@ namespace HyperNeatLib.NEATImpl
         {
             this.HiddenNodes = new List<INeuron>();
             Connections = new List<IConnection>();
-            EnabledConnections = new List<IConnection>();
             Inputs = new List<INeuron>();
             Outputs = new List<INeuron>();
         }
@@ -25,8 +24,6 @@ namespace HyperNeatLib.NEATImpl
         public List<INeuron> HiddenNodes { get; set; }
 
         public List<IConnection> Connections { get; set; }
-
-        public List<IConnection> EnabledConnections { get; set; }
 
         public List<INeuron> Inputs { get; set; }
 
@@ -75,15 +72,19 @@ namespace HyperNeatLib.NEATImpl
 
         public double[] GetOutputs()
         {
+            var enabledCons = Connections.Where(c => c.IsEnabled).ToArray();
+            var hiddenNodes = HiddenNodes.ToArray();
+
             for (int i = 0; i < ActivationSteps; i++)
             {
-                foreach (var connection in EnabledConnections)
+                for (int j = 0; j < enabledCons.Length; j++)
                 {
-                    connection.Calculate();
+                    enabledCons[j].Calculate();
                 }
 
-                foreach (var node in this.HiddenNodes)
+                for (int j = 0; j < hiddenNodes.Length; j++)
                 {
+                    var node = hiddenNodes[j];
                     node.Calculate();
                     node.Input = 0.0;
                 }
@@ -280,11 +281,6 @@ namespace HyperNeatLib.NEATImpl
 
                 this.Connections.Add(newConnection);
 
-                if (newConnection.IsEnabled)
-                {
-                    EnabledConnections.Add(newConnection);
-                }
-
                 return true;
             }
 
@@ -298,15 +294,6 @@ namespace HyperNeatLib.NEATImpl
             if (random.NextDouble() < MutationParameterSingleton.DisableConnectionChance)
             {
                 connection.IsEnabled = !connection.IsEnabled;
-
-                if (!connection.IsEnabled)
-                {
-                    EnabledConnections.Remove(connection);
-                }
-                else
-                {
-                    EnabledConnections.Add(connection);
-                }
             }
             else
             {
@@ -353,11 +340,6 @@ namespace HyperNeatLib.NEATImpl
                 }
 
                 network.Connections.Add(newConnection);
-
-                if (newConnection.IsEnabled)
-                {
-                    EnabledConnections.Add(newConnection);
-                }
             }
 
             return network;

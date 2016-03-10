@@ -87,6 +87,8 @@ namespace HyperNeat.NeuralNetTestBitcoin
                 int start = int.Parse(sr.ReadLine().Split(',')[0]);
                 var unixTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
 
+                var ema = 0.0;
+
                 while (!done)
                 {
                     var lines = new List<String>();
@@ -141,16 +143,23 @@ namespace HyperNeat.NeuralNetTestBitcoin
                                         Volume = tempTrade.Sum(t => t.Item2)
                                     };
 
+                    if (ema == 0)
+                    {
+                        ema = trade.FirstPrice;
+                    }
+
+                    ema = ema + 0.18 * (trade.FirstPrice - ema);
+
                     currentTrade = trade;
 
                     network.SetInputs(
-                        trade.FirstPrice,
-                        trade.LastPrice,
-                        trade.MinPrice,
-                        trade.MaxPrice,
-                        trade.Volume,
-                        usd,
-                        bitcoin);
+                                (trade.FirstPrice / ema - 1) * 100,
+                                (trade.LastPrice / ema - 1) * 100,
+                                (trade.MinPrice / ema - 1) * 100,
+                                (trade.MaxPrice / ema - 1) * 100,
+                                trade.Volume,
+                                usd,
+                                bitcoin * trade.FirstPrice);
 
                     var output = network.GetOutputs();
 
