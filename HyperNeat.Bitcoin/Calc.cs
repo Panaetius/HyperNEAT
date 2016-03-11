@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.Serialization.Formatters;
-using System.Threading;
 using System.Threading.Tasks;
 
 using HyperNeatLib.Factories;
@@ -113,19 +112,19 @@ namespace HyperNeat.Bitcoin
             var start = random.Next(minUnixTime, (int)(maxUnixTime - (TradeMonths * 30 * 24 * 60 * 60)));
             var end = random.Next(start + ((TradeMonths * 30 * 24 * 60 * 60) / 2), start + (TradeMonths * 30 * 24 * 60 * 60));
 
-            var trades = GetTradeEntries(start, end, false);
+            var trades = GetTradeEntries(1385856000, 1451520000, false);
 
-            while (trades == null || trades.First().FirstPrice < trades.Last().LastPrice)
-            {
-                trades = null;
+            //while (trades == null || trades.First().FirstPrice < trades.Last().LastPrice)
+            //{
+            //    trades = null;
 
-                GC.Collect();
+            //    GC.Collect();
 
-                start = random.Next(minUnixTime, (int)(maxUnixTime - (TradeMonths * 30 * 24 * 60 * 60)));
-                end = random.Next(start + ((TradeMonths * 30 * 24 * 60 * 60) / 2), start + (TradeMonths * 30 * 24 * 60 * 60));
+            //    start = random.Next(minUnixTime, (int)(maxUnixTime - (TradeMonths * 30 * 24 * 60 * 60)));
+            //    end = random.Next(start + ((TradeMonths * 30 * 24 * 60 * 60) / 2), start + (TradeMonths * 30 * 24 * 60 * 60));
 
-                trades = GetTradeEntries(start, end, false);
-            }
+            //    trades = GetTradeEntries(start, end, false);
+            //}
 
             var ascending = false;
 
@@ -146,75 +145,75 @@ namespace HyperNeat.Bitcoin
 
             trades = trades.Skip(10).ToList();
 
-            List<TradeEntry> newTrades = null;
+            //List<TradeEntry> newTrades = null;
 
-            var thread = new Thread(
-                () =>
-                    {
-                        while (newTrades == null || newTrades.Count < 8000
-                               || (ascending && newTrades.First().FirstPrice <= newTrades.Last().LastPrice)
-                               || (!ascending && newTrades.First().FirstPrice > newTrades.Last().LastPrice))
-                        {
-                            newTrades = null;
+            //var thread = new Thread(
+            //    () =>
+            //        {
+            //            while (newTrades == null || newTrades.Count < 8000
+            //                   || (ascending && newTrades.First().FirstPrice <= newTrades.Last().LastPrice)
+            //                   || (!ascending && newTrades.First().FirstPrice > newTrades.Last().LastPrice))
+            //            {
+            //                newTrades = null;
 
-                            GC.Collect();
+            //                GC.Collect();
 
-                            start = random.Next(minUnixTime, (int)(maxUnixTime - (TradeMonths * 30 * 24 * 60 * 60)));
-                            end = random.Next(
-                                start + ((TradeMonths * 30 * 24 * 60 * 60) / 2),
-                                start + (TradeMonths * 30 * 24 * 60 * 60));
+            //                start = random.Next(minUnixTime, (int)(maxUnixTime - (TradeMonths * 30 * 24 * 60 * 60)));
+            //                end = random.Next(
+            //                    start + ((TradeMonths * 30 * 24 * 60 * 60) / 2),
+            //                    start + (TradeMonths * 30 * 24 * 60 * 60));
 
-                            newTrades = GetTradeEntries(start, end, !ascending);
-                        }
+            //                newTrades = GetTradeEntries(start, end, !ascending);
+            //            }
 
-                        ascending = !ascending;
-                    });
+            //            ascending = !ascending;
+            //        });
 
-            thread.Start();
+            //thread.Start();
 
             while (true)
             {
-                if (count - lastBestGenomeOverallChange > 5)
-                {
-                    thread.Join();
+                //if (count - lastBestGenomeOverallChange > 5)
+                //{
+                //    thread.Join();
 
-                    startEma = newTrades.First().FirstPrice;
+                //    startEma = newTrades.First().FirstPrice;
 
-                    foreach (var tr in newTrades.Take(10))
-                    {
-                        startEma = startEma + 0.18 * (tr.FirstPrice - startEma);
-                    }
+                //    foreach (var tr in newTrades.Take(10))
+                //    {
+                //        startEma = startEma + 0.18 * (tr.FirstPrice - startEma);
+                //    }
 
-                    newTrades = newTrades.Skip(10).ToList();
+                //    newTrades = newTrades.Skip(10).ToList();
 
-                    trades = newTrades;
+                //    trades = newTrades;
 
-                    bestGenomeOverallFitness = 0.0;
+                //    bestGenomeOverallFitness = 0.0;
 
-                    thread = new Thread(
-                        () =>
-                        {
-                            while (newTrades == null || newTrades.Count < 8000
-                                   || (ascending && newTrades.First().FirstPrice <= newTrades.Last().LastPrice)
-                                   || (!ascending && newTrades.First().FirstPrice > newTrades.Last().LastPrice))
-                            {
-                                newTrades = null;
+                //    thread = new Thread(
+                //        () =>
+                //        {
+                //            while (newTrades == null || newTrades.Count < 8000
+                //                   || (ascending && newTrades.First().FirstPrice <= newTrades.Last().LastPrice)
+                //                   || (!ascending && newTrades.First().FirstPrice > newTrades.Last().LastPrice))
+                //            {
+                //                newTrades = null;
 
-                                GC.Collect();
+                //                GC.Collect();
 
-                                start = random.Next(minUnixTime, (int)(maxUnixTime - (TradeMonths * 30 * 24 * 60 * 60)));
-                                end = random.Next(
-                                    start + ((TradeMonths * 30 * 24 * 60 * 60) / 2),
-                                    start + (TradeMonths * 30 * 24 * 60 * 60));
+                //                start = random.Next(minUnixTime, (int)(maxUnixTime - (TradeMonths * 30 * 24 * 60 * 60)));
+                //                end = random.Next(
+                //                    start + ((TradeMonths * 30 * 24 * 60 * 60) / 2),
+                //                    start + (TradeMonths * 30 * 24 * 60 * 60));
 
-                                newTrades = GetTradeEntries(start, end, !ascending);
-                            }
+                //                newTrades = GetTradeEntries(start, end, !ascending);
+                //            }
 
-                            ascending = !ascending;
-                        });
+                //            ascending = !ascending;
+                //        });
 
-                    thread.Start();
-                }
+                //    thread.Start();
+                //}
 
                 var turnWeightDifference = (1 - endWeight) / trades.Count;
 
@@ -234,7 +233,7 @@ namespace HyperNeat.Bitcoin
                     population.Networks,
                     network =>
                     {
-                        var usd = 500.0;
+                        var usd = 1000.0;
                         var bitcoin = 0.0;
 
                         var buyCount = 0;
@@ -248,7 +247,7 @@ namespace HyperNeat.Bitcoin
 
                         var i = 0;
 
-                        TradeEntry currentTrade = null;
+                        TradeEntry currentTrade;
 
                         var buys = new Stack<Tuple<double, double>>();
 
@@ -386,8 +385,8 @@ namespace HyperNeat.Bitcoin
                         var totalAmount = usd + (buys.Any() ? buys.Sum(b => b.Item1 * b.Item2 * 0.998) : 0);
 
                         //networks that don't trade at all get no fitness, networks that don't sell ever get a handycap
-                        var val = (profits - losses) * startPrice / endPrice;
-                        network.Fitness = Math.Max(0.0, 400 / (1 + Math.Exp(-0.02 * (val - 200))) - 6);
+                        var val = (profits - losses);// * startPrice / endPrice;
+                        network.Fitness = Math.Max(0.0, val); //Math.Max(0.0, 400 / (1 + Math.Exp(-0.02 * (val - 200))) - 6);
 
                         //if (network.HiddenNodes.Count == 0)
                         //{
@@ -505,7 +504,7 @@ namespace HyperNeat.Bitcoin
                         BestGenomeFitness = bestGenomeFitness,
                         BestGenomeBuys = bestGenomeBuys,
                         BestGenomeSells = bestGenomeSells,
-                        WeeklyProfit = (Math.Pow(bestGenomeMoney / 500.0, (4.0 * 24.0 * 365.0) / trades.Count) - 1) * 100,
+                        WeeklyProfit = (Math.Pow(bestGenomeMoney / 1000.0, (60 * 24.0 * 365.0 * 2) / trades.Count) - 1) * 100,
                         CurrentGeneration = population.CurrentGeneration,
                         BestGenomeMoney = bestGenomeMoney,
                         StartPrice = startPrice,
@@ -532,7 +531,7 @@ namespace HyperNeat.Bitcoin
                     bestGenomeFitness,
                     bestGenomeBuys,
                     bestGenomeSells,
-                    (Math.Pow(bestGenomeMoney / 500.0, (4.0 * 24.0 * 365.0) / trades.Count) - 1) * 100,
+                    (Math.Pow(bestGenomeMoney / 1000.0, (60 * 24.0 * 365.0 * 2) / trades.Count) - 1) * 100,
                     population.CurrentGeneration,
                     bestGenomeMoney,
                     startPrice,
@@ -550,7 +549,7 @@ namespace HyperNeat.Bitcoin
                         bestGenomeFitness,
                         bestGenomeBuys,
                         bestGenomeSells,
-                        (Math.Pow(bestGenomeMoney / 500.0, (4.0 * 24.0 * 365.0) / trades.Count) - 1) * 100,
+                        (Math.Pow(bestGenomeMoney / 1000.0, (60 * 24.0 * 365.0 * 2) / trades.Count) - 1) * 100,
                         population.CurrentGeneration,
                         bestGenomeMoney,
                         startPrice,
@@ -730,18 +729,18 @@ namespace HyperNeat.Bitcoin
         } 
     }
 
-    public class TradeEntry
+    public struct TradeEntry
     {
-        public DateTime Key { get; set; }
+        public DateTime Key;
 
-        public double FirstPrice { get; set; }
+        public double FirstPrice;
 
-        public double LastPrice { get; set; }
+        public double LastPrice;
 
-        public double MinPrice { get; set; }
+        public double MinPrice;
 
-        public double MaxPrice { get; set; }
+        public double MaxPrice;
 
-        public double Volume { get; set; }
+        public double Volume;
     }
 }

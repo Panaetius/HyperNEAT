@@ -11,7 +11,7 @@ namespace GraphPopulation
 {
     public partial class Form1 : Form
     {
-        private const int MinCount = 10;
+        private const int MinCount = 5;
         
         public Form1()
         {

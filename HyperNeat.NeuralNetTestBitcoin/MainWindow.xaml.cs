@@ -72,7 +72,7 @@ namespace HyperNeat.NeuralNetTestBitcoin
 
             var i = 0;
 
-            TradeEntry currentTrade = null;
+            TradeEntry currentTrade;
 
             var buys = new Stack<Tuple<double, double>>();
 
@@ -84,8 +84,17 @@ namespace HyperNeat.NeuralNetTestBitcoin
             {
                 String line;
                 var done = false;
-                int start = int.Parse(sr.ReadLine().Split(',')[0]);
                 var unixTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
+
+                while ((line = sr.ReadLine()) != null)
+                {
+                    if (int.Parse(line.Split(',')[0]) > 1451520000)
+                    {
+                        break;
+                    }
+                }
+
+                int start = int.Parse(sr.ReadLine().Split(',')[0]);
 
                 var ema = 0.0;
 
