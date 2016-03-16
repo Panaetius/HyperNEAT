@@ -40,7 +40,7 @@ namespace HyperNeatLib.Factories
                     break;
                 case NeuronType.Output:
                     neuron = new Neuron();
-                    neuron.ActivationFunction = new LinearActivationFunction();
+                    neuron.ActivationFunction = new PlainSigmoidActivationFunction();
                     neuron.Id = id ?? GenerationIdSingleton.Instance.NextNeuronGeneration;
                     neuron.Type = type;
                     break;
