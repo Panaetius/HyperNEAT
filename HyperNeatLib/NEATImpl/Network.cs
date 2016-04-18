@@ -43,7 +43,7 @@ namespace HyperNeatLib.NEATImpl
         {
             get
             {
-                return Connections.ToDictionary(c => c.Id, c => c.Weight);
+                return Connections.Where(c => c.IsEnabled).ToDictionary(c => c.Id, c => c.Weight);
             }
         }
 
@@ -72,14 +72,14 @@ namespace HyperNeatLib.NEATImpl
 
         public double[] GetOutputs()
         {
-            var enabledCons = Connections.Where(c => c.IsEnabled).ToArray();
+            var enabledCons = Connections.Where(c => c.IsEnabled);
             var hiddenNodes = HiddenNodes.ToArray();
 
             for (int i = 0; i < ActivationSteps; i++)
             {
-                for (int j = 0; j < enabledCons.Length; j++)
+                foreach (var enabledCon in enabledCons)
                 {
-                    enabledCons[j].Calculate();
+                    enabledCon.Calculate();
                 }
 
                 for (int j = 0; j < hiddenNodes.Length; j++)
@@ -186,7 +186,7 @@ namespace HyperNeatLib.NEATImpl
             var intArray =
                 HiddenNodes.OrderBy(n => n.Id)
                     .Select(n => n.Id)
-                    .Concat(Connections.OrderBy(c => c.Id).Select(c => c.Id))
+                    .Concat(Connections.Where(c => c.IsEnabled).OrderBy(c => c.Id).Select(c => c.Id))
                     .SelectMany(BitConverter.GetBytes)
                     .Where(b => b != 0)
                     .ToArray();
