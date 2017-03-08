@@ -10,7 +10,7 @@ namespace HyperNeat.XorTest
     {
         static void Main(string[] args)
         {
-            var population = PopulationFactory.CreatePopulation(2, 1, 1000);
+            var population = PopulationFactory.CreatePopulation(2, 1, 200);
 
             population.InitialSpeciesSize = 50;
 
@@ -26,6 +26,7 @@ namespace HyperNeat.XorTest
             while (true)
             {
                 var bestGenomeFitness = 0.0;
+                var bestGenomeCorrectSide = 0;
 
                 INetwork bestGenome = null;
 
@@ -40,43 +41,43 @@ namespace HyperNeat.XorTest
 
                             var output = network.GetOutputs()[0];
 
-                            fitness += 1 - Math.Abs(0 - output);
+                            fitness += 1 - output;
                             correctSide += output < 0.5 ? 1 : 0;
 
                             network.SetInputs(0, 1);
 
                             output = network.GetOutputs()[0];
 
-                            fitness += 1 - Math.Abs(1 - output);
+                            fitness += output;
                             correctSide += output >= 0.5 ? 1 : 0;
 
                             network.SetInputs(1, 0);
 
                             output = network.GetOutputs()[0];
 
-                            fitness += 1 - Math.Abs(1 - output);
+                            fitness += output;
                             correctSide += output >= 0.5 ? 1 : 0;
 
                             network.SetInputs(1, 1);
 
                             output = network.GetOutputs()[0];
 
-                            fitness += 1 - Math.Abs(0 - output);
+                            fitness += 1 - output;
                             correctSide += output < 0.5 ? 1 : 0;
 
-                            network.Fitness = fitness + (correctSide == 4 ? 10 : 0);
-
+                            network.Fitness = fitness;
                             lock (lockObject)
                             {
                                 if (network.Fitness > bestGenomeFitness)
                                 {
                                     bestGenomeFitness = network.Fitness;
                                     bestGenome = network;
+                                    bestGenomeCorrectSide = correctSide;
                                 }
                             }
                         });
 
-                Console.WriteLine("Gen: {0}, Best Genome Fitness: {1}", population.CurrentGeneration, bestGenomeFitness);
+                Console.WriteLine("Gen: {0}, Best Genome Fitness: {1}, Correct Side:{2}", population.CurrentGeneration, bestGenomeFitness, bestGenomeCorrectSide);
 
                 population.CalculateNextPopulation();
             }

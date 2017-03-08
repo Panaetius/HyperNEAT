@@ -62,6 +62,9 @@ namespace GraphPopulation
             {
                 Thread.Sleep(10);
             }
+
+            var count = int.Parse(tbMaxCount.Text);
+            chart1.ChartAreas[0].AxisY.Maximum = count;
             
             var lines = File.ReadAllLines(openFileDialog1.FileName);
 

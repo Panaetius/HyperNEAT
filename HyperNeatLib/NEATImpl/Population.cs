@@ -395,6 +395,36 @@ namespace HyperNeatLib.NEATImpl
                 offspringList.Add(newNetwork);
             }
 
+            for (int i = 0; i < NewRandomMutatedPerGeneration; i++)
+            {
+                var topSpecie = Species.OrderByDescending(s => s.MaxGenomeFitness).FirstOrDefault();
+
+                if (topSpecie == null)
+                {
+                    continue;
+                }
+
+                var network = topSpecie.Networks.OrderByDescending(n => n.Fitness).FirstOrDefault();
+
+                if (network == null)
+                {
+                    continue;
+                }
+
+                var newNetwork = (INetwork)network.Clone();
+
+                newNetwork.Generation = old.Generation;
+
+                var mutations = random.Next(5, 50);
+
+                for (int j = 0; j < mutations; j++)
+                {
+                    newNetwork.Mutate(random);
+                }
+
+                offspringList.Add(newNetwork);
+            }
+
 
             //add one old network each generation
             if (Directory.Exists("old_nets") && Directory.GetFiles("old_nets").Count() > 0)

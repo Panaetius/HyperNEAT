@@ -45,7 +45,7 @@ namespace HyperNeat.Bitcoin
         {
             GenerationIdSingleton.Instance.Reset();
 
-            var population = PopulationFactory.CreatePopulation(10, 3, 200);
+            var population = PopulationFactory.CreatePopulation(13, 3, 200);
 
             population.InitialSpeciesSize = 10;
 
@@ -120,6 +120,8 @@ namespace HyperNeat.Bitcoin
 
             var trades = GetTradeEntries(1372550400, 1440892800, true);
 
+            var testTrades = GetTradeEntries(1440892800, 1453204641, true);
+
             //while (trades == null || trades.First().FirstPrice < trades.Last().LastPrice)
             //{
             //    trades = null;
@@ -150,6 +152,15 @@ namespace HyperNeat.Bitcoin
             }
 
             trades = trades.Skip(10).ToList();
+
+            var teststartEma = testTrades.First().FirstPrice;
+
+            foreach (var tr in testTrades.Take(10))
+            {
+                teststartEma = teststartEma + 0.0328 * (tr.FirstPrice - teststartEma);
+            }
+
+            testTrades = testTrades.Skip(10).ToList();
 
             List<TradeEntry> newTrades = null;
 
@@ -241,280 +252,27 @@ namespace HyperNeat.Bitcoin
                 Parallel.ForEach(
                     population.Networks,
                     network =>
-                    {
-                        var usd = 1000.0;
-                        var bitcoin = 1000.0 / trades.First().MaxPrice;
-
-                        TradeEntry previousTrade = trades.First();
-
-                        var buyCount = 0;
-                        var sellCount = 0;
-
-                        var buySignalCount = 0;
-                        var sellSignalCount = 0;
-
-                        var profits = 0.0;
-
-                        var losses = 0.0;
-
-                        var netTradeHistory = new List<string>();
-
-                        var i = 0;
-
-                        TradeEntry currentTrade = trades.First();
-
-                        var buys = new Stack<Tuple<double, double>>();
-
-                        buys.Push(Tuple.Create(1000.0 / trades.First().MaxPrice, trades.First().MaxPrice));
-
-                        var averageMoney = 0.0;
-
-                        var currFitness = 0.0;
-
-                        var ema = startEma;
-
-                        var queue = new Queue<double>();
-
-                        var buySignals = new List<Signal>();
-                        var sellSignals = new List<Signal>();
-                        var ignoreSignals = new List<Signal>();
-                        var historicalBuySignals = 0.0;
-                        var historicalSellSignals = 0.0;
-                        var historicalIgnoreSignals = 0.0;
-
-
-                        for (int j = 0; j < 8; j++)
                         {
-                            queue.Enqueue((trades[j].FirstPrice / ema - 1) * 100);
-                            ema = ema + 0.0328 * (trades[j].FirstPrice - ema);
-                        }
-
-                        foreach (var trade in trades.Skip(10).ToList())
-                        {
-                            if (Stop)
-                            {
-                                return;
-                            }
-
-                            if (Math.Abs(trade.MaxPrice/previousTrade.MaxPrice - 1) > 0.5)
-                            {
-                                continue;
-                            }
-
-                            ema = ema + 0.0328 * (trade.FirstPrice - ema);
-
-                            currentTrade = trade;
-
-                            historicalBuySignals += buySignals.Where(s => i - s.Index > SignalLength / TradePeriod).Sum(b => b.Fitness);
-                            historicalSellSignals += sellSignals.Where(s => i - s.Index > SignalLength / TradePeriod).Sum(b => b.Fitness);
-                            historicalIgnoreSignals += ignoreSignals.Where(s => i - s.Index > SignalLength / TradePeriod).Sum(b => b.Fitness);
-
-                            buySignals = buySignals.Where(s => i - s.Index <= SignalLength / TradePeriod).ToList();
-                            sellSignals = sellSignals.Where(s => i - s.Index <= SignalLength / TradePeriod).ToList();
-                            ignoreSignals = ignoreSignals.Where(s => i - s.Index <= SignalLength / TradePeriod).ToList();
-
-
-                            foreach (Signal signal in buySignals)
-                            {
-                                var res = trade.LastPrice / signal.Price - 1;
-
-                                signal.Fitness += Math.Pow(res - MinTrade, 3) * Math.Pow(SignalWeight, SignalLength / TradePeriod - (i - signal.Index) + 1)
-                                                  * signal.Confidence * 100;
-                            }
-
-                            foreach (Signal signal in sellSignals)
-                            {
-                                var res = signal.Price / trade.LastPrice - 1;
-
-                                signal.Fitness += Math.Pow(res - MinTrade, 3) * Math.Pow(SignalWeight, SignalLength / TradePeriod - (i - signal.Index) + 1)
-                                                  * signal.Confidence * 100;
-                            }
-
-                            foreach (Signal signal in ignoreSignals)
-                            {
-                                var res = signal.Price / trade.LastPrice - 1;
-
-                                signal.Fitness += Math.Pow(MinTrade - Math.Abs(res), 3)
-                                                  * Math.Pow(SignalWeight, SignalLength / TradePeriod - (i - signal.Index) + 1) * signal.Confidence * 100;
-                            }
-
-                            var newEl = (previousTrade.LastPrice / ema - 1) * 100;
-
-                            var hist = queue.ToArray();
-
-                            network.SetInputs(
-                                hist[0],
-                                hist[1],
-                                hist[2],
-                                hist[3],
-                                hist[4],
-                                hist[5],
-                                hist[6],
-                                hist[7],
-                                newEl,
-                                previousTrade.Volume);
-
-                            queue.Enqueue(newEl);
-                            queue.Dequeue();
-
-                            var output = network.GetOutputs();
-
-                            if (i < 50)
-                            {
-                                previousTrade = trade;
-                                i++; //do nothing first 50 rounds so networks can initialize if necessary
-                                continue;
-                            }
-                            var ignoreSignal = output[0];
-                            var ignoreConfidence = output[0];
-                            var buySignal = output[1];
-                            var buyConfidence = output[1];
-                            var sellSignal = output[2];
-                            var sellConfidence = output[2];
-
-                            if (buySignal > ignoreSignal && buySignal > sellSignal)
-                            {
-                                buySignals.Add(
-                                    new Signal()
-                                        {
-                                            Index = i,
-                                            Price = trade.LastPrice,
-                                            Confidence = buyConfidence,
-                                            Fitness = 0.0
-                                        });
-                                buySignalCount++;
-
-                                var amount = buySignal * usd;
-
-                                // buy bitcoin
-                                var btcAmount = amount / trade.MaxPrice * 0.998;
-
-                                if (amount <= usd && amount != 0 && btcAmount >= 0.01)// && buyConfidence > 0.2)
-                                {
-                                    netTradeHistory.Add(
-                                        $"B{{{trade.Key:yyyy-MM-dd HH:mm},{amount},{trade.MaxPrice},{usd},{bitcoin}}} ");
-                                    buyCount++;
-
-                                    buys.Push(Tuple.Create(btcAmount, trade.MaxPrice));
-
-                                    usd -= amount;
-
-                                    bitcoin += btcAmount;
-                                }
-                            }
-                            else if (sellSignal > ignoreSignal && sellSignal > buySignal)
-                            {
-                                //sell bitcoin
-                                sellSignals.Add(
-                                    new Signal()
-                                    {
-                                        Index = i,
-                                        Price = trade.LastPrice,
-                                        Confidence = sellConfidence,
-                                        Fitness = 0.0
-                                    });
-                                sellSignalCount++;
-
-                                var btcAmount = sellSignal * bitcoin;
-
-                                if (btcAmount <= bitcoin && btcAmount != 0 && btcAmount >= 0.01)// && sellConfidence > 0.2)
-                                {
-                                    SellBtcAmount(btcAmount, buys, trade, ref profits, ref losses);
-
-                                    netTradeHistory.Add(
-                                        $"S{{{trade.Key:yyyy-MM-dd HH:mm},{btcAmount * trade.MinPrice},{trade.MinPrice},{usd},{bitcoin}}} ");
-                                    sellCount++;
-
-                                    bitcoin -= btcAmount;
-
-                                    usd += btcAmount * trade.MinPrice * 0.998;
-
-                                    if (!buys.Any())
-                                    {
-                                        bitcoin = 0;
-                                    }
-                                }
-                            }
-                            else
-                            {
-                                ignoreSignals.Add(
-                                    new Signal()
-                                    {
-                                        Index = i,
-                                        Price = trade.LastPrice,
-                                        Confidence = ignoreConfidence,
-                                        Fitness = 0.0
-                                    });
-                            }
-
-                            //var currAmount = usd + bitcoin * currentTrade.Item4 * 0.998;
-                            //var holdPrice = 500 + (500.0 / startPrice) * currentTrade.Item4 * 0.998;
-
-                            //var difference = currAmount
-                            //                 - holdPrice;
-
-                            //difference *= (1 - i * turnWeightDifference);
-
-                            //averageMoney = (averageMoney * (i / (i + 1.0)))
-                            //               + (difference / (i + 1));
-
-                            previousTrade = trade;
-
-                            i++;
-                        }
-
-                        var prefProfits = profits;
-
-                        SellBtcAmount(bitcoin, buys, currentTrade, ref profits, ref losses);
-
-                        //profits = (profits - prefProfits) * 0.8 + prefProfits;
-
-                        usd += bitcoin * currentTrade.MinPrice * 0.998;
-
-                        var totalAmount = usd;
-
-                        if (sellCount < 1)
-                        {
-                            losses = 1000;
-                        }
-
-                        historicalBuySignals += buySignals.Sum(b => b.Fitness);
-                        historicalSellSignals += sellSignals.Sum(b => b.Fitness);
-                        historicalIgnoreSignals += ignoreSignals.Sum(b => b.Fitness);
-
-                        //networks that don't trade at all get no fitness, networks that don't sell ever get a handycap
-                        var val = 0.0;//Math.Log(1 + Math.Exp(0.01 * (profits - losses) * startPrice / endPrice));
-                        val += Math.Log(1 + Math.Exp(0.001 * (historicalBuySignals+ historicalSellSignals+ historicalIgnoreSignals - 10000)));
-                        //val += Math.Log(1 + Math.Exp(0.01 * historicalSellSignals));
-                        //val += Math.Log(1 + Math.Exp(0.01 * historicalIgnoreSignals));
-                        network.Fitness = val; //Math.Max(0.0, 400 / (1 + Math.Exp(-0.02 * (val - 200))) - 6);
-
-                        //if (network.HiddenNodes.Count == 0)
-                        //{
-                        //    network.Fitness = Math.Min(network.Fitness/1.5, 4);
-                        //}
-
-                        network.Score = totalAmount;
-
-                        lock (lockObject)
-                        {
-                            if (network.Fitness > bestGenomeFitness || network.Fitness == bestGenomeFitness && network.Score > bestGenomeMoney)
-                            {
-                                bestGenomeFitness = network.Fitness;
-                                bestGenomeBuys = buyCount;
-                                bestGenomeSells = sellCount;
-                                bestGenomeMoney = network.Score;
-                                bestGenomeTradeHistory = string.Join("", netTradeHistory);
-                                bestNetwork = network;
-                            }
-                        }
-                    });
+                            this.RunNetworkTrades(
+                                trades,
+                                startEma,
+                                network,
+                                tradeCount,
+                                lockObject,
+                                ref bestGenomeFitness,
+                                ref bestGenomeMoney,
+                                ref bestGenomeBuys,
+                                ref bestGenomeSells,
+                                ref bestGenomeTradeHistory,
+                                ref bestNetwork);
+                        });
 
                 if (bestGenomeFitness / bestGenomeOverallFitness > 1.1)
                 {
                     bestGenomeOverallFitness = bestGenomeFitness;
                     lastBestGenomeOverallChange = count;
                 }
+
 
                 File.AppendAllText(
                     "PopulationDevelopment.txt",
@@ -529,69 +287,33 @@ namespace HyperNeat.Bitcoin
                     return;
                 }
 
-                //var minFitness = population.Networks.Min(n => n.Fitness);
-
-                //foreach (var network in population.Networks)
-                //{
-                //    network.Fitness -= minFitness - 0.01;
-                //}
-
                 var usde = 500.0;
                 var bitcoine = 0.0;
                 var buyCounte = 0;
                 var sellCounte = 0;
                 var netTradeHistorye = string.Empty;
+                
+                var testGenomeFitness = 0.0;
+                var testGenomeBuys = 0;
+                var testGenomeSells = 0;
+                var testGenomeMoney = 0.0;
+                var testGenomeTradeHistory = string.Empty;
+                INetwork testNetwork = (INetwork)bestNetwork.Clone();
 
-                //bestNetwork.Reset();
+                this.RunNetworkTrades(
+                    testTrades,
+                    teststartEma,
+                    testNetwork,
+                    testTrades.Count(),
+                    lockObject,
+                    ref testGenomeFitness,
+                    ref testGenomeMoney,
+                    ref testGenomeBuys,
+                    ref testGenomeSells,
+                    ref testGenomeTradeHistory,
+                    ref testNetwork);
 
-                //foreach (var trade in tradeHistory)
-                //{
-                //    bestNetwork.SetInputs(trade.Item2, trade.Item3, trade.Item4, trade.Item5, trade.Item6, usde, bitcoine);
-
-                //    var output = bestNetwork.GetOutputs();
-
-                //    if (output[0] > 0)
-                //    {
-                //        var amount = output[1] * (usde + bitcoine * trade.Item3 * 0.998); ;
-
-                //        if (amount > 0)
-                //        {
-                //            // buy bitcoin
-                //            var btcAmount = amount / trade.Item5 * 0.998;
-
-                //            if (amount <= usde && amount != 0 && btcAmount >= 0.01)
-                //            {
-                //                netTradeHistorye +=
-                //                    $"B{{{trade.Item1:yyyy-MM-dd HH:mm},{amount},{trade.Item5}}} ";
-                //                buyCounte++;
-
-                //                usde -= amount;
-
-                //                bitcoine += btcAmount;
-                //            }
-                //        }
-                //        else
-                //        {
-                //            //sell bitcoin
-                //            amount *= -1;
-
-                //            var btcAmount = amount / trade.Item4;
-
-                //            if (btcAmount <= bitcoine && btcAmount != 0 && btcAmount >= 0.01)
-                //            {
-                //                netTradeHistorye +=
-                //                    $"S{{{trade.Item1:yyyy-MM-dd HH:mm},{amount},{trade.Item4}}} ";
-                //                sellCounte++;
-
-                //                bitcoine -= btcAmount;
-
-                //                usde += btcAmount * trade.Item4 * 0.998;
-                //            }
-                //        }
-                //    }
-                //}
-
-                var bestGenomeTotalMoney = 0;//usde + bitcoine * tradeHistory.Last().Item4 * 0.998;
+                var bestGenomeTotalMoney = testGenomeMoney * testTrades.First().FirstPrice / testTrades.Last().LastPrice;//usde + bitcoine * tradeHistory.Last().Item4 * 0.998;
 
                 if (ProgressUpdate != null)
                 {
@@ -622,21 +344,21 @@ namespace HyperNeat.Bitcoin
                     });
                 }
 
-                Console.WriteLine(
-                    "Gen: {4}, Max Fit: {0:0.00000}, AVG Fit: {9:0.00000}, Money: {5:0.00}, Best Money: {11:0.00}, Buy: {1}, Sells: {2}, WP: {3:0.00000}, Start: {6}, End: {7}, Spec: {8}, Trade History: {10}",
-                    bestGenomeFitness,
-                    bestGenomeBuys,
-                    bestGenomeSells,
-                    (Math.Pow(bestGenomeMoney / 2000.0, ((60.0 / TradePeriod) * 24.0 * 30 * TradeMonths) / trades.Count) - 1) * 100,
-                    population.CurrentGeneration,
-                    bestGenomeMoney,
-                    startPrice,
-                    endPrice,
-                    population.Species.Count(s => s.Networks.Any()),
-                    population.Networks.Average(n => n.Fitness),
-                    bestGenomeTradeHistory,
-                    bestGenomeTotalMoney
-                    );
+                //Console.WriteLine(
+                //    "Gen: {4}, Max Fit: {0:0.00000}, AVG Fit: {9:0.00000}, Money: {5:0.00}, Best Money: {11:0.00}, Buy: {1}, Sells: {2}, WP: {3:0.00000}, Start: {6}, End: {7}, Spec: {8}, Trade History: {10}",
+                //    bestGenomeFitness,
+                //    bestGenomeBuys,
+                //    bestGenomeSells,
+                //    (Math.Pow(bestGenomeMoney / 2000.0, ((60.0 / TradePeriod) * 24.0 * 30 * TradeMonths) / trades.Count) - 1) * 100,
+                //    population.CurrentGeneration,
+                //    bestGenomeMoney,
+                //    startPrice,
+                //    endPrice,
+                //    population.Species.Count(s => s.Networks.Any()),
+                //    population.Networks.Average(n => n.Fitness),
+                //    bestGenomeTradeHistory,
+                //    bestGenomeTotalMoney
+                //    );
 
                 File.AppendAllText(
                     "stats.txt",
@@ -739,7 +461,225 @@ namespace HyperNeat.Bitcoin
             }
         }
 
-        private static void SellBtcAmount(double btcAmount, Stack<Tuple<double, double>> buys, TradeEntry trade, ref double profits, ref double losses)
+        private void RunNetworkTrades(
+            List<TradeEntry> trades,
+            double startEma,
+            INetwork network,
+            int tradeCount,
+            object lockObject,
+            ref double bestGenomeFitness,
+            ref double bestGenomeMoney,
+            ref int bestGenomeBuys,
+            ref int bestGenomeSells,
+            ref string bestGenomeTradeHistory,
+            ref INetwork bestNetwork)
+        {
+            var usd = 1000.0;
+            var bitcoin = 1000.0 / trades.First().MaxPrice;
+
+            TradeEntry previousTrade = trades.First();
+
+            var buyCount = 0;
+            var sellCount = 0;
+
+            var buySignalCount = 0;
+            var sellSignalCount = 0;
+
+            var profits = 0.0;
+
+            var losses = 0.0;
+
+            var profitCount = 1.0;
+            var lossCount = 1.0;
+
+            var netTradeHistory = new List<string>();
+
+            var i = 0;
+
+            TradeEntry currentTrade = trades.First();
+
+            var buys = new Stack<Tuple<double, double>>();
+
+            buys.Push(Tuple.Create(1000.0 / trades.First().MaxPrice, trades.First().MaxPrice));
+
+            var averageMoney = 0.0;
+
+            var currFitness = 0.0;
+
+            var ema = startEma;
+
+            var queue = new Queue<double>();
+
+            for (int j = 0; j < 11; j++)
+            {
+                queue.Enqueue((trades[j].FirstPrice / ema - 1) * 100);
+                ema = ema + 0.08 * (trades[j].FirstPrice - ema);
+            }
+
+            foreach (var trade in trades.Skip(10).ToList())
+            {
+                //if (this.Stop)
+                //{
+                //    return bestGenomeFitness;
+                //}
+
+                if (Math.Abs(trade.MaxPrice / previousTrade.MaxPrice - 1) > 0.5)
+                {
+                    continue;
+                }
+
+                ema = ema + 0.08 * (trade.FirstPrice - ema);
+
+                currentTrade = trade;
+
+                var newEl = (previousTrade.LastPrice / ema - 1) * 100;
+
+                var hist = queue.ToArray();
+
+                network.SetInputs(
+                    hist[0],
+                    hist[1],
+                    hist[2],
+                    hist[3],
+                    hist[4],
+                    hist[5],
+                    hist[6],
+                    hist[7],
+                    hist[8],
+                    hist[9],
+                    hist[10],
+                    newEl,
+                    previousTrade.Volume);
+
+                queue.Enqueue(newEl);
+                queue.Dequeue();
+
+                var output = network.GetOutputs();
+
+                if (i < 50)
+                {
+                    previousTrade = trade;
+                    i++; //do nothing first 50 rounds so networks can initialize if necessary
+                    continue;
+                }
+                var ignoreSignal = output[0];
+                //var ignoreConfidence = output[0];
+                var buySignal = output[1];
+                //var buyConfidence = output[1];
+                var sellSignal = output[2];
+                //var sellConfidence = output[2];
+
+                if (buySignal > ignoreSignal && buySignal > sellSignal)
+                {
+                    buySignalCount++;
+
+                    var amount = buySignal * usd;
+
+                    // buy bitcoin
+                    var btcAmount = amount / trade.MaxPrice * 0.998;
+
+                    if (amount <= usd && amount != 0 && btcAmount >= 0.01) // && buyConfidence > 0.2)
+                    {
+                        netTradeHistory.Add($"B{{{trade.Key:yyyy-MM-dd HH:mm},{amount},{trade.MaxPrice},{usd},{bitcoin}}} ");
+                        buyCount++;
+
+                        buys.Push(Tuple.Create(btcAmount, trade.MaxPrice));
+
+                        usd -= amount;
+
+                        bitcoin += btcAmount;
+                    }
+                }
+                else if (sellSignal > ignoreSignal && sellSignal > buySignal)
+                {
+                    //sell bitcoin
+                    sellSignalCount++;
+
+                    var btcAmount = sellSignal * bitcoin;
+
+                    if (btcAmount <= bitcoin && btcAmount != 0 && btcAmount >= 0.01) // && sellConfidence > 0.2)
+                    {
+                        SellBtcAmount(btcAmount, buys, trade, ref profits, ref losses, ref profitCount, ref lossCount);
+
+                        netTradeHistory.Add(
+                            $"S{{{trade.Key:yyyy-MM-dd HH:mm},{btcAmount * trade.MinPrice},{trade.MinPrice},{usd},{bitcoin}}} ");
+                        sellCount++;
+
+                        bitcoin -= btcAmount;
+
+                        usd += btcAmount * trade.MinPrice * 0.998;
+
+                        if (!buys.Any())
+                        {
+                            bitcoin = 0;
+                        }
+                    }
+                }
+
+                //var currAmount = usd + bitcoin * currentTrade.Item4 * 0.998;
+                //var holdPrice = 500 + (500.0 / startPrice) * currentTrade.Item4 * 0.998;
+
+                //var difference = currAmount
+                //                 - holdPrice;
+
+                //difference *= (1 - i * turnWeightDifference);
+
+                //averageMoney = (averageMoney * (i / (i + 1.0)))
+                //               + (difference / (i + 1));
+
+                previousTrade = trade;
+
+                i++;
+            }
+
+            var prefProfits = profits;
+
+            SellBtcAmount(bitcoin, buys, currentTrade, ref profits, ref losses, ref profitCount, ref lossCount);
+
+            //profits = (profits - prefProfits) * 0.8 + prefProfits;
+
+            usd += bitcoin * currentTrade.MinPrice * 0.998;
+
+            var totalAmount = usd;
+
+            if (sellCount < 1)
+            {
+                losses = 1000;
+                lossCount = 100000;
+            }
+
+            //networks that don't trade at all get no fitness, networks that don't sell ever get a handycap
+            //var val = 0.0;//Math.Log(1 + Math.Exp(0.01 * (profits - losses) * startPrice / endPrice));
+            //var val = Math.Log(1 + Math.Exp(0.1 * ((10 * (1.0 * buyCount + sellCount) / tradeCount) * Math.Pow(usd / 2000.0, 2))));
+            var val = (Math.Pow((1.0 * buyCount + sellCount) / tradeCount, 0.9) * Math.Pow(usd / 2000.0, 3)
+                       * Math.Pow(profitCount / lossCount, 1));
+            //val += Math.Log(1 + Math.Exp(0.01 * historicalSellSignals));
+            //val += Math.Log(1 + Math.Exp(0.01 * historicalIgnoreSignals));
+            network.Fitness = val; //Math.Max(0.0, 400 / (1 + Math.Exp(-0.02 * (val - 200))) - 6);
+
+            //if (network.HiddenNodes.Count == 0)
+            //{
+            //    network.Fitness = Math.Min(network.Fitness/1.5, 4);
+            //}
+
+            network.Score = totalAmount;
+
+            lock (lockObject)
+            {
+                if (network.Fitness > bestGenomeFitness
+                    || network.Fitness == bestGenomeFitness && network.Score > bestGenomeMoney)
+                {
+                    bestGenomeFitness = network.Fitness;
+                    bestGenomeBuys = buyCount;
+                    bestGenomeSells = sellCount;
+                    bestGenomeMoney = network.Score;
+                    bestGenomeTradeHistory = string.Join("", netTradeHistory);
+                    bestNetwork = network;
+                }
+            }
+        }
+
+        private static void SellBtcAmount(double btcAmount, Stack<Tuple<double, double>> buys, TradeEntry trade, ref double profits, ref double losses, ref double profitCount, ref double lossCount)
         {
             var btcTradeAmount = btcAmount;
 
@@ -753,10 +693,12 @@ namespace HyperNeat.Bitcoin
                     if (amt > 0)
                     {
                         profits += amt;
+                        profitCount += 1;
                     }
                     else
                     {
                         losses += -1 * amt;
+                        lossCount += 1;
                     }
 
                     btcTradeAmount -= currTrade.Item1;
@@ -773,10 +715,12 @@ namespace HyperNeat.Bitcoin
                     if (amt > 0)
                     {
                         profits += amt;
+                        profitCount += 1;
                     }
                     else
                     {
                         losses += -1 * amt;
+                        lossCount += 1;
                     }
 
                     buys.Push(Tuple.Create(currTrade.Item1 - btcTradeAmount, currTrade.Item2));

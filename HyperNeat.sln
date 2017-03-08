@@ -13,10 +13,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HyperNeat.XorTest", "HyperN
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HyperNeat.NeuralNetTestBitcoin", "HyperNeat.NeuralNetTestBitcoin\HyperNeat.NeuralNetTestBitcoin.csproj", "{C2C67B0D-731A-4C1E-8A0E-BD028DCCEE1A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HyperNeat.PokerTest", "HyperNeat.PokerTest\HyperNeat.PokerTest.csproj", "{5E2FCCE3-7745-4DEF-97B8-0576C95F5839}"
+EndProject
 Global
-	GlobalSection(Performance) = preSolution
-		HasPerformanceSessions = true
-	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Debug|x64 = Debug|x64
@@ -64,6 +63,14 @@ Global
 		{C2C67B0D-731A-4C1E-8A0E-BD028DCCEE1A}.Release|Any CPU.Build.0 = Release|Any CPU
 		{C2C67B0D-731A-4C1E-8A0E-BD028DCCEE1A}.Release|x64.ActiveCfg = Release|Any CPU
 		{C2C67B0D-731A-4C1E-8A0E-BD028DCCEE1A}.Release|x64.Build.0 = Release|Any CPU
+		{5E2FCCE3-7745-4DEF-97B8-0576C95F5839}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5E2FCCE3-7745-4DEF-97B8-0576C95F5839}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5E2FCCE3-7745-4DEF-97B8-0576C95F5839}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{5E2FCCE3-7745-4DEF-97B8-0576C95F5839}.Debug|x64.Build.0 = Debug|Any CPU
+		{5E2FCCE3-7745-4DEF-97B8-0576C95F5839}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5E2FCCE3-7745-4DEF-97B8-0576C95F5839}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5E2FCCE3-7745-4DEF-97B8-0576C95F5839}.Release|x64.ActiveCfg = Release|Any CPU
+		{5E2FCCE3-7745-4DEF-97B8-0576C95F5839}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
